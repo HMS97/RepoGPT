@@ -1,19 +1,8 @@
 import gradio as gr
-
-
-
 import os
-import subprocess
-import tempfile
 import shutil
-
 import requests
 import zipfile
-
-from pathlib import Path
-from pypdf import PdfReader, PdfWriter
-
-
 from PyPDF2 import PdfFileReader, PdfFileWriter
 import PyPDF2
 from io import BytesIO
@@ -21,19 +10,15 @@ from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate,Preformatted
 from reportlab.platypus import Image  as RLImage
 from reportlab.platypus import Paragraph, Spacer
-
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.utils import ImageReader
 from PIL import Image
-
 import os
 from langchain.indexes.vectorstore import VectorstoreIndexCreator
 from langchain.chains import VectorDBQA
 from langchain import OpenAI
 from langchain.document_loaders import UnstructuredPDFLoader
-
 from langchain.vectorstores.faiss import FAISS
-
 from langchain.embeddings.openai import OpenAIEmbeddings
 from flask import send_file
 
