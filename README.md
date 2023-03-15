@@ -2,22 +2,12 @@
 # RepoGPT
 RepoGPT is a Python library that allows you to search and answer questions about a GitHub repository's content using OpenAI's GPT-3.5-turbo. The library converts the repository into a PDF file and then indexes the content using the VectorstoreIndexCreator and FAISS. The content can then be queried and answered using OpenAI's GPT-3.5-turbo API.
 
-## Dependencies
-- gradio
-- os
-- shutil
-- requests
-- zipfile
-- PyPDF2
-- reportlab
-- PIL
-- langchain
-- flask
--Installation
-
 
 
 Usage
+Install the dependencies:
+```pip install -r requirements.txt```
+
 Initialize the REPOGPT object:
 ```python
 repogpt = REPOGPT()
