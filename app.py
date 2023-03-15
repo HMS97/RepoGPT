@@ -40,13 +40,13 @@ class REPOGPT:
 
 
 
-    def REPOGPT_Initialized(self,):
+    def REPOGPT_Initialized(self,image_included = False):
 
         
         os.environ["OPENAI_API_KEY"] = self.api_key
         if self.load_vectorstore == None:
          
-            loader = UnstructuredPDFLoader( self.create_repo_pdf(self.repo_link))
+            loader = UnstructuredPDFLoader( self.create_repo_pdf(self.repo_link,image_included = image_included))
             pages = loader.load_and_split()
             self.index = VectorstoreIndexCreator(vectorstore_cls = FAISS).from_loaders([loader])
             self.vectorstore = self.index.vectorstore
@@ -198,11 +198,19 @@ class REPOGPT:
 
    
 
-    def create_repo_pdf(self, repo_link, merged_pdf = "merged.pdf"):
+    def create_repo_pdf(self, repo_link, image_included = False,  merged_pdf = "merged.pdf"):
         self.merged_pdf_path = merged_pdf
         self.download_repo_zip(repo_link)
         folder_name = self.extract_zip('./main.zip', './')
         ingnore_list = ['__pycache__',]
+        if not image_included:
+            ingnore_list.append('.jpg')
+            ingnore_list.append('.png')
+            ingnore_list.append('.jpeg')
+            ingnore_list.append('.gif')
+            ingnore_list.append('.bmp')
+            ingnore_list.append('.tiff')
+
         pdf_files = []
         for root, dirs, files in os.walk(folder_name):
             for file in files:
@@ -236,78 +244,79 @@ class REPOGPT:
     def Answer_quetsion(self, question):
         return self.qa.run(question)
 
-repogpt = REPOGPT()
 
 
-def call_output(string = 'REPOGPT Initializing'):
-    return string
+if __name__ == "__main__":
+    repogpt = REPOGPT()
 
-def download_file(filename = 'merged.pdf'):
-    # filename = repogpt.get_pdf()
-    return send_file(filename, as_attachment=True)
 
-with gr.Blocks() as demo:
-    with gr.Row():
-        gr.Markdown("<h3><center>REPO ChatGPT</center></h3>")
-        gr.Markdown(
-            """This is a demo to the work [Visual ChatGPT: Talking, Drawing and Editing with Visual Foundation Models](https://github.com/microsoft/visual-chatgpt).<br>
-            This space connects ChatGPT and a series of Visual Foundation Models to enable sending and receiving images during chatting.<br>  
-            """
-        )
-    with gr.Row():
-        apikey = gr.Textbox(
-            placeholder="Paste your OpenAI API key here to start Visual ChatGPT(sk-...) and press Enter ↵️",
-            show_label=True,
-            label = 'OpenAI API key',
-            lines=1,
-            type="password",
-        )
-    with gr.Row():
-        repo_link = gr.Textbox(
-            placeholder="Paste your repo_link and press Enter ↵️",
-            label = 'repo_link',
+    def call_output(string = 'REPOGPT Initializing'):
+        return string
 
-            show_label=True,
-            lines=1,
-        )    
+    def download_file(filename = 'merged.pdf'):
+        # filename = repogpt.get_pdf()
+        return send_file(filename, as_attachment=True)
 
-    with gr.Column(scale=0.7):
-            Initialize = gr.Button("Initialize RepoGPT")
+    with gr.Blocks() as demo:
+        with gr.Row():
+            gr.Markdown("<h3><center>REPOGPT</center></h3>")
+            gr.Markdown(
+                """This is a demo to the work [REPOGPT](https://github.com/wuchangsheng951/RepoGPT).<br>
+                This space connects ChatGPT and RepoGPT is a Python library that allows you to search and answer questions about a GitHub repository's content.<br>  
+                """
+            )
+        with gr.Row():
+            apikey = gr.Textbox(
+                placeholder="Paste your OpenAI API key here to start Visual ChatGPT(sk-...) and press Enter ↵️",
+                show_label=True,
+                label = 'OpenAI API key',
+                lines=1,
+                type="password",
+            )
+        with gr.Row():
+            repo_link = gr.Textbox(
+                placeholder="Paste your repo_link and press Enter ↵️",
+                label = 'Repo_link, Like: https://github.com/wuchangsheng951/RepoGPT ',
 
-    output = gr.Textbox(label="Output Box")
+                show_label=True,
+                lines=1,
+            )    
 
-    with gr.Row(visible=False) as input_raws:
         with gr.Column(scale=0.7):
-            txt = gr.Textbox(show_label=False, placeholder="Enter your question").style(container=False)
+                Initialize = gr.Button("Initialize RepoGPT")
 
-        with gr.Column(scale=0.4):
-            AQ = gr.Button("Ask a Question").style(container=False)
+        output = gr.Textbox(label="Output Box")
 
-        # with gr.Row():
-        #     Download = gr.Button("Download PDF")
+        with gr.Row(visible=False) as input_raws:
+            with gr.Column(scale=0.7):
+                txt = gr.Textbox(show_label=False, placeholder="Enter your question").style(container=False)
 
+            with gr.Column(scale=0.4):
+                AQ = gr.Button("Ask a Question").style(container=False)
 
-    gr.Examples(
-        examples=["Whats the name of this repo?",
-                  "Whats this repo for?",
-                  "How can I use this. Example code ? Step by step",
-                  "how can I use this Experiment trackers ? Step by step",
-                  "how can I Performing gradient accumulation with Accelerate? Step by step?",
-                  "Make it like water-color painting",
-                  "What is the background color",
-                  "Describe this image",
-                  "please detect the depth of this image",
-                  "Can you use this depth image to generate a cute dog",
-                  ],
-        inputs=txt
-    )
-
-    apikey.submit(repogpt.init_agent, [apikey,repo_link], [input_raws, output])
-    Initialize.click(repogpt.init_agent, [apikey,repo_link], [input_raws, output])
-    apikey.submit(call_output, [],[output])
-    txt.submit(repogpt.Answer_quetsion, [txt], [output])
-    AQ.click(repogpt.Answer_quetsion, [txt], [output])
-    # Download.click(download_file, [], [Download])
+            # with gr.Row():
+            #     Download = gr.Button("Download PDF")
 
 
-demo.launch()
+        gr.Examples(
+            examples=["Whats the name of this repo?",
+                    "Whats this repo for?",
+                    "How can I use this Example code ? Step by step",
+                    "how can I use this Experiment trackers ? Step by step",
+                    "how can I Performing gradient accumulation with Accelerate? Step by step?",
+                    "the models.py ? can you show me the code ? step by step",
+                    "model initialization ? can you show me the code ? step by step",
+                    "Whats the learning rate of this model?",
+                    ],
+            inputs=txt
+        )
+
+        apikey.submit(repogpt.init_agent, [apikey,repo_link], [input_raws, output])
+        Initialize.click(repogpt.init_agent, [apikey,repo_link], [input_raws, output])
+        apikey.submit(call_output, [],[output])
+        txt.submit(repogpt.Answer_quetsion, [txt], [output])
+        AQ.click(repogpt.Answer_quetsion, [txt], [output])
+        # Download.click(download_file, [], [Download])
+
+
+    demo.launch()

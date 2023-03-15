@@ -1,0 +1,11 @@
+gradio
+requests
+PyPDF2
+reportlab
+PILLOW
+langchain
+flask
+unstructured
+unstructured[local-inference]
+openai
+faiss-cpu
