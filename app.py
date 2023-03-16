@@ -288,7 +288,7 @@ if __name__ == "__main__":
         with gr.Row():
             repo_link = gr.Textbox(
                 placeholder="Paste your repo_link and press Enter ↵️",
-                label = 'repo_link',
+                label = 'repo_link like: https://github.com/wuchangsheng951/RepoGPT',
 
                 show_label=True,
                 lines=1,

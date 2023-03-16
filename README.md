@@ -4,11 +4,12 @@ RepoGPT is a Python library that allows you to search and answer questions about
 
 
 
-Usage
-Install the dependencies:
+# Usage
+
+## Install the dependencies:
 ```pip install -r requirements.txt```
 
-Initialize the REPOGPT object:
+## Initialize the REPOGPT object:
 ```python
 repogpt = REPOGPT()
 repogpt.init_agent(api_key="your_api_key", repo_link="https://github.com/user/repo")
