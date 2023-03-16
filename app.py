@@ -15,12 +15,13 @@ from reportlab.lib.utils import ImageReader
 from PIL import Image
 import os
 from langchain.indexes.vectorstore import VectorstoreIndexCreator
-from langchain.chains import VectorDBQA
+from langchain.chains import VectorDBQA,VectorDBQAWithSourcesChain
 from langchain import OpenAI
 from langchain.document_loaders import UnstructuredPDFLoader
 from langchain.vectorstores.faiss import FAISS
 from langchain.embeddings.openai import OpenAIEmbeddings
 from flask import send_file
+from IPython.display import Markdown, display
 
 
 class REPOGPT:
@@ -30,6 +31,10 @@ class REPOGPT:
         self.api_key = None
 
     def init_agent(self, api_key, repo_link = None,  load_vectorstore = None):
+        try:
+            os.remove('merged.pdf')
+        except:
+            pass
         self.repo_link = repo_link
         self.api_key = api_key
         self.load_vectorstore = load_vectorstore
@@ -45,14 +50,15 @@ class REPOGPT:
         
         os.environ["OPENAI_API_KEY"] = self.api_key
         if self.load_vectorstore == None:
-         
             loader = UnstructuredPDFLoader( self.create_repo_pdf(self.repo_link,image_included = image_included))
-            pages = loader.load_and_split()
+            # pages = loader.load_and_split()
             self.index = VectorstoreIndexCreator(vectorstore_cls = FAISS).from_loaders([loader])
             self.vectorstore = self.index.vectorstore
+            print(' vectorstore created')
         else:
             embeddings = OpenAIEmbeddings()
-            self.vectorstore = FAISS.load_local('asd.json',embeddings =embeddings)
+            self.vectorstore = FAISS.load_local(self.load_vectorstore,embeddings =embeddings)
+            print(' vectorstore loaded')
 
         self.qa = VectorDBQA.from_chain_type(llm =OpenAI(temperature=0, model_name="gpt-3.5-turbo"), chain_type = "stuff",vectorstore = self.vectorstore )
 
@@ -63,7 +69,6 @@ class REPOGPT:
     def download_repo_zip(self, link, output_folder = "main.zip"):
         username =  link.split('/')[3]
         repo = link.split('/')[4]
-        # zip_url = f"https://github.com/{username}/{repo}/archive/refs/heads/main.zip"
         zip_url = f"https://github.com/{username}/{repo}/archive/refs/heads/master.zip"
         self.zip_url = zip_url
         response = requests.get(zip_url)
@@ -71,6 +76,8 @@ class REPOGPT:
         #down load the zip file
         with open('main.zip', 'wb') as f:
             f.write(response.content)
+        # return the name of the extracted folder
+        # return self.extract_zip("main.zip", output_folder)
         # return BytesIO(response.content)
 
     def extract_zip(self, zip_file, destination_folder):
@@ -198,7 +205,7 @@ class REPOGPT:
 
    
 
-    def create_repo_pdf(self, repo_link, image_included = False,  merged_pdf = "merged.pdf"):
+    def create_repo_pdf(self, repo_link, image_included = False,  merged_pdf = "temp_merged.pdf"):
         self.merged_pdf_path = merged_pdf
         self.download_repo_zip(repo_link)
         folder_name = self.extract_zip('./main.zip', './')
@@ -211,6 +218,7 @@ class REPOGPT:
             ingnore_list.append('.bmp')
             ingnore_list.append('.tiff')
 
+        print('folder_name: ', folder_name)
         pdf_files = []
         for root, dirs, files in os.walk(folder_name):
             for file in files:
@@ -238,24 +246,28 @@ class REPOGPT:
         shutil.rmtree(folder_name)
         shutil.rmtree("temp")
 
-        return merged_pdf
+        return self.merged_pdf_path
 
 
     def Answer_quetsion(self, question):
         return self.qa.run(question)
+        
+    def Answer_quetsion_with_source(self, question):
+        return self.qa({"question": question}, return_only_outputs = True)
 
+
+
+def call_output(string = 'REPOGPT Initializing'):
+    return string
+
+def download_file(filename = 'merged.pdf'):
+    # filename = repogpt.get_pdf()
+    return send_file(filename, as_attachment=True)
 
 
 if __name__ == "__main__":
     repogpt = REPOGPT()
 
-
-    def call_output(string = 'REPOGPT Initializing'):
-        return string
-
-    def download_file(filename = 'merged.pdf'):
-        # filename = repogpt.get_pdf()
-        return send_file(filename, as_attachment=True)
 
     with gr.Blocks() as demo:
         with gr.Row():
@@ -276,7 +288,7 @@ if __name__ == "__main__":
         with gr.Row():
             repo_link = gr.Textbox(
                 placeholder="Paste your repo_link and press Enter ↵️",
-                label = 'Repo_link, Like: https://github.com/wuchangsheng951/RepoGPT ',
+                label = 'repo_link',
 
                 show_label=True,
                 lines=1,
@@ -301,12 +313,14 @@ if __name__ == "__main__":
         gr.Examples(
             examples=["Whats the name of this repo?",
                     "Whats this repo for?",
-                    "How can I use this Example code ? Step by step",
+                    "How can I use this. Example code ? Step by step",
                     "how can I use this Experiment trackers ? Step by step",
                     "how can I Performing gradient accumulation with Accelerate? Step by step?",
-                    "the models.py ? can you show me the code ? step by step",
-                    "model initialization ? can you show me the code ? step by step",
-                    "Whats the learning rate of this model?",
+                    "Make it like water-color painting",
+                    "What is the background color",
+                    "Describe this image",
+                    "please detect the depth of this image",
+                    "Can you use this depth image to generate a cute dog",
                     ],
             inputs=txt
         )
