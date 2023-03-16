@@ -21,7 +21,7 @@ from langchain.document_loaders import UnstructuredPDFLoader
 from langchain.vectorstores.faiss import FAISS
 from langchain.embeddings.openai import OpenAIEmbeddings
 from flask import send_file
-from IPython.display import Markdown, display
+# from IPython.display import Markdown, display
 
 
 class REPOGPT:
