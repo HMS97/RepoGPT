@@ -8,8 +8,11 @@ With REPOGPT, developers and users can focus more on their tasks and projects, a
 
 # Usage
 
-## Install the dependencies:
-```pip install -r requirements.txt```
+```
+git clone  https://github.com/wuchangsheng951/RepoGPT
+pip install -r requirements.txt
+python app.py
+```
 
 ## Initialize the REPOGPT object:
 ```python
